@@ -96,6 +96,8 @@ graph TD
     UC_D1 --> UC_D2
     UC_D2 --> UC_D3
     UC_M2 -.-> UC_D4
+```
+
 ## Diagrama de Entidad relación
 
 ```mermaid
