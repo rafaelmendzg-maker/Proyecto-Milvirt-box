@@ -52,6 +52,7 @@ flowchart TD
 
 
 ## Diagrama de Casos de uso
+```mermaid
 graph TD
     %% Actores
     AdminMLS(["Administrador MLS"])
