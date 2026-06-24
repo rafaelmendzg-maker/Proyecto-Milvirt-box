@@ -11,8 +11,7 @@
 ## Conventional Commits
 
 - **Bitacora de Cambios**:
-### Added - para nuevas funcionalidades (feat).
-
+### Added - para nuevas funcionalidades (feat). 
 ### Fixed - para correcciones de errores (fix).
 
 ### Changed - para cambios en funcionalidades existentes (refactor, perf).

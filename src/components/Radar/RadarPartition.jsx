@@ -4,60 +4,61 @@ import RadarCanvas from './RadarCanvas';
 
 const RadarPartition = () => {
   const canvasRef = useRef(null);
-  const { targets, threatCount } = useLocalRadar();
+  const { targets, threatCount, TIPO_COLOR, TIPO_ICONO, lostTargets } = useLocalRadar();
+  const sweepAngle = useRef(0);     // 🔄 Ángulo persistente
+  const animationId = useRef(null);
 
-  // Función para dibujar el radar (similar a la original)
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
-    let sweepAngle = 0;
-    let animationId;
 
     const draw = () => {
       if (!ctx || !canvas) return;
       const w = canvas.width, h = canvas.height;
       if (w === 0) return;
-      const cx = w/2, cy = h/2, rad = w/2 - 4;
+      const cx = w/2, cy = h/2;
+      const radius = Math.min(w, h) / 2 - 4;
+      const scale = radius / 150;  
+
+      
       ctx.clearRect(0, 0, w, h);
       ctx.fillStyle = '#05180e';
       ctx.fillRect(0, 0, w, h);
       ctx.strokeStyle = '#44cf9a';
       ctx.beginPath();
-      ctx.arc(cx, cy, rad, 0, 2 * Math.PI);
+      ctx.arc(cx, cy, radius, 0, 2 * Math.PI);
       ctx.stroke();
-      for (let r = rad/3; r <= rad; r += rad/3) {
+      for (let r = radius/3; r <= radius; r += radius/3) {
         ctx.beginPath();
         ctx.arc(cx, cy, r, 0, 2 * Math.PI);
         ctx.strokeStyle = '#2e805e';
         ctx.stroke();
       }
-      for (let ang = 0; ang < 360; ang += 45) {
-        const radAng = ang * Math.PI / 180;
-        const x2 = cx + rad * Math.cos(radAng);
-        const y2 = cy + rad * Math.sin(radAng);
-        ctx.beginPath();
-        ctx.moveTo(cx, cy);
-        ctx.lineTo(x2, y2);
-        ctx.strokeStyle = '#2f6e53';
-        ctx.stroke();
-      }
+
+      
       targets.forEach(t => {
-        const radAngle = (t.angleDeg - 90) * Math.PI / 180;
-        const r = (t.distance / 150) * rad;
-        const x = cx + r * Math.cos(radAngle);
-        const y = cy + r * Math.sin(radAngle);
+        const x = cx + t.x * scale;
+        const y = cy + t.y * scale;
+        if (Math.abs(x) > w + 20 || Math.abs(y) > h + 20) return;
         ctx.beginPath();
-        ctx.fillStyle = t.isThreat ? '#ff8855' : '#66ffcc';
+        let color = TIPO_COLOR[t.tipo] || '#66ffcc';
+        if (lostTargets.has(t.id)) color = '#666666';
+        ctx.fillStyle = color;
         ctx.arc(x, y, 5, 0, 2 * Math.PI);
         ctx.fill();
+        ctx.font = '12px monospace';
         ctx.fillStyle = 'white';
-        ctx.font = 'bold 10px monospace';
-        ctx.fillText(t.id, x + 4, y - 3);
+        ctx.fillText(TIPO_ICONO[t.tipo] || '?', x + 6, y - 4);
+        ctx.font = '8px monospace';
+        ctx.fillStyle = '#cccccc';
+        ctx.fillText(t.id, x + 2, y - 10);
       });
-      const sweepRad = (sweepAngle - 90) * Math.PI / 180;
-      const ex = cx + rad * Math.cos(sweepRad);
-      const ey = cy + rad * Math.sin(sweepRad);
+
+      
+      const sweepRad = (sweepAngle.current - 90) * Math.PI / 180;
+      const ex = cx + radius * Math.cos(sweepRad);
+      const ey = cy + radius * Math.sin(sweepRad);
       ctx.beginPath();
       ctx.moveTo(cx, cy);
       ctx.lineTo(ex, ey);
@@ -65,33 +66,40 @@ const RadarPartition = () => {
       ctx.lineWidth = 2;
       ctx.stroke();
       ctx.lineWidth = 1;
-      sweepAngle = (sweepAngle + 5) % 360;
-      animationId = requestAnimationFrame(draw);
+
+      
+      sweepAngle.current = (sweepAngle.current + 2) % 360;
+      animationId.current = requestAnimationFrame(draw);
     };
+
     draw();
-    return () => cancelAnimationFrame(animationId);
-  }, [targets]);
+
+    return () => {
+      if (animationId.current) cancelAnimationFrame(animationId.current);
+    };
+  }, [targets, lostTargets, TIPO_COLOR, TIPO_ICONO]); // Dependencias necesarias
 
   return (
     <div className="vm-card">
       <div className="card-header">
-        <h2>📡 RADAR</h2>
-        <span className="criticality critical-high">⚡ TIEMPO REAL</span>
+        <h2>📡 RADAR EN TIEMPO REAL</h2>
+        <span className="criticality critical-high"> SIMULACIÓN </span>
       </div>
       <div className="card-content">
         <RadarCanvas ref={canvasRef} />
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <span>🎯 Amenazas: {threatCount}</span>
-          <span>🔄 Latencia &lt; 15ms</span>
+          <span>🎯 Amenazas cercanas: {threatCount}</span>
+          <span>🔄 Barrido continuo</span>
         </div>
         <div className="targets-list">
-          {targets.length === 0 ? <div>✈️ Sin contactos activos</div> :
+          {targets.length === 0 ? <div>✈️ Sin contactos</div> :
             targets.slice().reverse().map(t => (
               <div key={t.id} className="target-item">
-                <span>ID:{t.id}</span>
-                <span>{t.distance.toFixed(0)}m</span>
-                <span>{t.angleDeg.toFixed(0)}°</span>
-                <span className={t.isThreat ? 'threat' : ''}>{t.isThreat ? '⚠️ AMENAZA' : '● CONTACTO'}</span>
+                <span>{TIPO_ICONO[t.tipo]} ID:{t.id}</span>
+                <span>Dist: {Math.hypot(t.x, t.y).toFixed(0)}m</span>
+                <span className={lostTargets.has(t.id) ? 'lost' : (t.isThreat ? 'threat' : '')}>
+                  {lostTargets.has(t.id) ? '⚠️ PÉRDIDA' : (t.isThreat ? '⚠️ AMENAZA' : '● CONTACTO')}
+                </span>
               </div>
             ))
           }
