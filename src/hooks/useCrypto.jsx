@@ -20,3 +20,13 @@ export const decryptMessage = (cipher) => {
     return "[error descifrado]"
   }
 }
+
+export const decryptMessage = (cipher) => {
+  try {
+    const xorred = atob(cipher);
+    return xorEncryptDecrypt(xorred, CRYPTO_KEY);
+  } catch (error) {
+    console.error(`[ERROR] [${new Date().toISOString()}] - Error al descifrar: ${error.message}`);
+    return '[error]';
+  }
+};
