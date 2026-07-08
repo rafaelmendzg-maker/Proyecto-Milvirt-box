@@ -606,7 +606,7 @@ footer {
   color: #ff8844;
 }
 
-/* Contenedor de tabla con scroll */
+
 .admin-table-container {
   overflow-x: auto;
   margin-bottom: 25px;
@@ -614,7 +614,7 @@ footer {
   border: 1px solid #1f4a3a;
 }
 
-/* Tablas */
+
 .admin-table {
   width: 100%;
   border-collapse: collapse;
