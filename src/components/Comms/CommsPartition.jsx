@@ -5,7 +5,8 @@ import { decryptMessage } from '../../hooks/useCrypto';
 
 const CommsPartition = () => {
   const { user } = useAuth();
-  const { messages, sendMessage } = usePersistentMessages(user?.id);
+  // Pasamos el email al hook
+  const { messages, sendMessage } = usePersistentMessages(user?.id, user?.email);
   const [inputMsg, setInputMsg] = useState('');
   const [decryptedMap, setDecryptedMap] = useState({});
 
@@ -41,12 +42,16 @@ const CommsPartition = () => {
           ) : (
             messages.map((msg) => (
               <div key={msg.id} className="msg-entry">
+                {/* Mostrar el remitente */}
+                <strong style={{ color: '#aaddff' }}>
+                  {msg.sender_email || 'Anónimo'}:
+                </strong>{' '}
                 <span className="ciphertext">🔒 {msg.cipher.substring(0, 50)}...</span>
                 <button
                   className="decrypt-btn"
                   onClick={() => handleDecryptSingle(msg.id, msg.cipher)}
                 >
-                  {decryptedMap[msg.id] ? '✓ descifrado' : ' Descifrar'}
+                  {decryptedMap[msg.id] ? '✓ descifrado' : '🔓 Descifrar'}
                 </button>
                 {decryptedMap[msg.id] && (
                   <span className="plaintext-hidden"> → "{decryptedMap[msg.id]}"</span>
@@ -68,7 +73,7 @@ const CommsPartition = () => {
         <button className="mil-button" style={{ background: '#1c3b30' }} onClick={handleDecryptAll}>
            Descifrar todos
         </button>
-        <div style={{ fontSize: '0.7rem', marginTop: '6px' }}>Criptografía | Datos persistentes en Supabase</div>
+        <div style={{ fontSize: '0.7rem', marginTop: '6px' }}> Criptografía XOR + b64 | Datos persistentes en Supabase</div>
       </div>
     </div>
   );
