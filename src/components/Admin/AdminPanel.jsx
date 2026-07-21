@@ -38,8 +38,8 @@ const AdminPanel = ({ userId }) => {
 
   if (!isOpen) {
     return (
-      <button className="admin-toggle-btn" onClick={() => setIsOpen(true)}>
-         Ver registros de BD
+      <button className="btn-admin" onClick={() => setIsOpen(true)}>
+        <span className="icon"></span> Ver BD
       </button>
     );
   }
@@ -48,9 +48,9 @@ const AdminPanel = ({ userId }) => {
     <div className="admin-modal-overlay" onClick={() => setIsOpen(false)}>
       <div className="admin-modal" onClick={(e) => e.stopPropagation()}>
         <button className="close-btn" onClick={() => setIsOpen(false)}>✖</button>
-        <h2>📊 Registros de Supabase</h2>
+        <h2></h2>
         {error && <p className="admin-error">{error}</p>}
-        {loading && <p>Cargando datos...</p>}
+        {loading && <p className="loading">Cargando datos...</p>}
         {!loading && !error && (
           <>
             <h3> Mensajes ({messages.length})</h3>
@@ -61,7 +61,7 @@ const AdminPanel = ({ userId }) => {
                   {messages.map(m => (
                     <tr key={m.id}>
                       <td>{m.id}</td>
-                      <td>{m.cipher?.substring(0, 40)}...</td>
+                      <td><code>{m.cipher?.substring(0, 40)}...</code></td>
                       <td>{m.sender_email || '?'}</td>
                       <td>{new Date(m.created_at).toLocaleString()}</td>
                     </tr>
@@ -91,14 +91,14 @@ const AdminPanel = ({ userId }) => {
             <h3> Configuraciones de usuario ({settings.length})</h3>
             <div className="admin-table-container">
               <table className="admin-table">
-                <thead><tr><th>User ID</th><th>Sensibilidad</th><th>Alarma silenciada</th><th>Rol</th></tr></thead>
+                <thead><tr><th>User ID</th><th>Sensibilidad</th><th>Alarma</th><th>Rol</th></tr></thead>
                 <tbody>
                   {settings.map(s => (
                     <tr key={s.user_id}>
                       <td>{s.user_id?.substring(0, 12)}...</td>
                       <td>{s.sensitivity}%</td>
-                      <td>{s.alarm_silenced ? 'Sí' : 'No'}</td>
-                      <td>{s.role || 'user'}</td>
+                      <td>{s.alarm_silenced ? '🔇 Silenciada' : '🔊 Activa'}</td>
+                      <td><span className={`role-badge ${s.role === 'admin' ? 'admin' : 'user'}`}>{s.role || 'user'}</span></td>
                     </tr>
                   ))}
                 </tbody>

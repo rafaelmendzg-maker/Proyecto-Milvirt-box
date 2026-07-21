@@ -645,4 +645,57 @@ footer {
   border-radius: 4px;
   max-height: 60px;
   overflow: auto;
+} 
+/* Botón de bd*/
+
+.btn-admin {
+  background: rgba(10, 30, 25, 0.7);
+  backdrop-filter: blur(6px);
+  border: 1px solid #3ce0a0;
+  border-radius: 40px;
+  padding: 8px 18px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.85rem;
+  font-weight: bold;
+  color: #c6ffe8;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.25s ease;
+  box-shadow: 0 0 8px rgba(60, 224, 160, 0.2);
+}
+
+.btn-admin:hover {
+  background: rgba(30, 70, 60, 0.8);
+  box-shadow: 0 0 20px #3ce0a0, 0 0 8px #65f7c0;
+  transform: translateY(-2px);
+  border-color: #65f7c0;
+}
+
+.btn-admin:active {
+  transform: scale(0.96);
+}
+
+.btn-admin .icon {
+  font-size: 1.2rem;
+  filter: drop-shadow(0 0 4px #3ce0a0);
+}
+
+.role-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: bold;
+}
+.role-badge.admin {
+  background: #1a4a3a;
+  color: #65f7c0;
+  border: 1px solid #65f7c0;
+}
+.role-badge.user {
+  background: #1a2a2a;
+  color: #88aa99;
+  border: 1px solid #3a5a4a;
 }
