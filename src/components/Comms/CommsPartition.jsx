@@ -5,44 +5,75 @@ import { decryptMessage } from '../../hooks/useCrypto';
 
 const CommsPartition = () => {
   const { user } = useAuth();
-  // Pasamos el email al hook
   const { messages, sendMessage } = usePersistentMessages(user?.id, user?.email);
   const [inputMsg, setInputMsg] = useState('');
   const [decryptedMap, setDecryptedMap] = useState({});
+  const [isDecrypting, setIsDecrypting] = useState(false);
+  const [error, setError] = useState(null);
 
   const handleSend = async () => {
     if (!inputMsg.trim()) return;
-    await sendMessage(inputMsg);
-    setInputMsg('');
+    try {
+      await sendMessage(inputMsg);
+      setInputMsg('');
+      setError(null);
+    } catch (err) {
+      console.error('[ERROR] Error al enviar mensaje:', err);
+      setError('No se pudo enviar el mensaje.');
+    }
   };
 
-  const handleDecryptSingle = (id, cipher) => {
-    const plain = decryptMessage(cipher);
-    setDecryptedMap(prev => ({ ...prev, [id]: plain }));
+  const handleDecryptSingle = async (id, cipher) => {
+    try {
+      const plain = await decryptMessage(cipher);
+      setDecryptedMap(prev => ({ ...prev, [id]: plain }));
+      setError(null);
+    } catch (err) {
+      console.error(`[ERROR] Error al descifrar mensaje ${id}:`, err);
+      setError(`Error al descifrar. Código: ${id}`);
+    }
   };
 
-  const handleDecryptAll = () => {
+  const handleDecryptAll = async () => {
+    setIsDecrypting(true);
+    setError(null);
     const newMap = {};
-    messages.forEach(msg => {
-      newMap[msg.id] = decryptMessage(msg.cipher);
-    });
-    setDecryptedMap(newMap);
+    try {
+      for (const msg of messages) {
+        try {
+          newMap[msg.id] = await decryptMessage(msg.cipher);
+        } catch (err) {
+          console.error(`[ERROR] Error al descifrar mensaje ${msg.id}:`, err);
+          newMap[msg.id] = '[error al descifrar]';
+        }
+      }
+      setDecryptedMap(newMap);
+    } catch (err) {
+      console.error('[ERROR] Error en descifrado masivo:', err);
+      setError('Error al descifrar todos los mensajes.');
+    } finally {
+      setIsDecrypting(false);
+    }
   };
 
   return (
     <div className="vm-card">
       <div className="card-header">
         <h2> PARTICIÓN 3 · COMMS</h2>
-        <span className="criticality critical-enc"> CIFRADO SIMÉTRICO</span>
+        <span className="criticality critical-enc"> CIFRADO SIMÉTRICO (AES-GCM)</span>
       </div>
       <div className="card-content">
+        {error && (
+          <div style={{ color: '#ff6644', background: '#2a0a0a', padding: '8px', borderRadius: '8px', marginBottom: '8px' }}>
+            ⚠️ {error}
+          </div>
+        )}
         <div className="chat-log">
           {messages.length === 0 ? (
             <div className="msg-entry">No hay mensajes aún. Envía uno.</div>
           ) : (
             messages.map((msg) => (
               <div key={msg.id} className="msg-entry">
-                {/* Mostrar el remitente */}
                 <strong style={{ color: '#aaddff' }}>
                   {msg.sender_email || 'Anónimo'}:
                 </strong>{' '}
@@ -50,6 +81,7 @@ const CommsPartition = () => {
                 <button
                   className="decrypt-btn"
                   onClick={() => handleDecryptSingle(msg.id, msg.cipher)}
+                  disabled={isDecrypting}
                 >
                   {decryptedMap[msg.id] ? '✓ descifrado' : '🔓 Descifrar'}
                 </button>
@@ -67,13 +99,23 @@ const CommsPartition = () => {
             onChange={(e) => setInputMsg(e.target.value)}
             placeholder="Mensaje a transmitir (cifrado)"
             style={{ flex: 1, background: '#0b1914', border: '1px solid #3b8f70', color: '#def5e8', padding: '6px', borderRadius: '40px' }}
+            disabled={isDecrypting}
           />
-          <button className="mil-button" onClick={handleSend}> Enviar</button>
+          <button className="mil-button" onClick={handleSend} disabled={isDecrypting}>
+             Enviar
+          </button>
         </div>
-        <button className="mil-button" style={{ background: '#1c3b30' }} onClick={handleDecryptAll}>
-           Descifrar todos
+        <button
+          className="mil-button"
+          style={{ background: '#1c3b30' }}
+          onClick={handleDecryptAll}
+          disabled={isDecrypting}
+        >
+          {isDecrypting ? ' Descifrando...' : ' Descifrar todos'}
         </button>
-        <div style={{ fontSize: '0.7rem', marginTop: '6px' }}> Criptografía XOR + b64 | Datos persistentes en Supabase</div>
+        <div style={{ fontSize: '0.7rem', marginTop: '6px' }}>
+           Criptografía AES-GCM | Datos persistentes en el Backend Supabase
+        </div>
       </div>
     </div>
   );

@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { encryptMessage } from './useCrypto';
 
+const CRYPTO_KEY = import.meta.env.VITE_CRYPTO_KEY || 'clave-por-defecto-no-segura';
+
 export const usePersistentMessages = (userId, userEmail) => {
   const [messages, setMessages] = useState([]);
 
@@ -30,7 +32,6 @@ export const usePersistentMessages = (userId, userEmail) => {
   const sendMessage = async (plainText) => {
     if (!plainText.trim() || !userId) return;
 
-    // Si no se pasó email, lo obtenemos de la sesión
     let email = userEmail;
     if (!email) {
       try {
@@ -41,12 +42,17 @@ export const usePersistentMessages = (userId, userEmail) => {
       }
     }
 
-    const cipher = encryptMessage(plainText);
-    await supabase.from('messages').insert({
-      cipher,
-      user_id: userId,
-      sender_email: email,
-    });
+    try {
+      const cipher = await encryptMessage(plainText, CRYPTO_KEY);
+      await supabase.from('messages').insert({
+        cipher,
+        user_id: userId,
+        sender_email: email,
+      });
+    } catch (error) {
+      console.error('[ERROR] Error al enviar mensaje:', error);
+      throw error;
+    }
   };
 
   return { messages, sendMessage };

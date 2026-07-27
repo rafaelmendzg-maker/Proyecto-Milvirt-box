@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabaseClient';
-import AdminPanel from '../Admin/AdminPanel'; 
+import AdminPanel from '../Admin/AdminPanel';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const Header = () => {
   const { user, logout } = useAuth();
+  const { isDark, toggleTheme } = useTheme();
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
@@ -20,32 +22,64 @@ const Header = () => {
 
   return (
     <div className="mil-header">
-      {/* logo + TÍTULO */}
+      {/* Logo + Título */}
       <div className="logo-area" style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-        <img 
-          src="/logodelproyecto2.png"          
-          alt="Milvirt Logo" 
-          height="70"             
+        <img
+          src="/logodelproyecto2.png"
+          alt="Milvirt Logo"
+          height="70"
           style={{ objectFit: 'contain' }}
         />
         <div>
-          <h1 style={{ margin: 0, fontSize: 'clamp(1.6rem, 5vw, 2rem)', letterSpacing: '4px', fontWeight: 400, textShadow: '0 0 8px #2affb6' }}>
-             MILVIRT  
+          <h1 style={{
+            margin: 0,
+            fontSize: 'clamp(1.6rem, 5vw, 2rem)',
+            letterSpacing: '4px',
+            fontWeight: 400,
+            color: 'var(--color-title)',
+            textShadow: isDark ? '0 0 8px #2affb6' : 'none',
+          }}>
+             MILVIRT 
           </h1>
-          <p style={{ margin: 0, fontSize: '0.75rem', color: '#89cfb0' }}>
-            Hypervisor Bare-Metal · seL4 Kernel · Superficie de Ataque Mínima
+          <p style={{
+            margin: 0,
+            fontSize: '0.75rem',
+            color: 'var(--color-subtitle)',
+          }}>
+             Superficie de Ataque Mínima
           </p>
         </div>
       </div>
 
-      {/* PARTE DERECHA: ESTADÍSTICAS + BOTÓN ADMIN + LOGOUT */}
-      <div className="hypervisor-stats">
-        <span> TCB &lt;2500 LOC</span> &nbsp;|&nbsp; <span> Aislamiento temporal/espacial</span>
+      {/* Parte derecha: estadísticas + tema + admin + logout */}
+      <div className="hypervisor-stats" style={{ color: 'var(--color-stats)' }}>
+        <span> TCB &lt;2500 LOC</span>
+        &nbsp;|&nbsp;
+        <span> l</span>
+
+        {/* Botón de tema */}
+        <button
+          onClick={toggleTheme}
+          style={{
+            background: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+            border: `1px solid var(--color-border)`,
+            borderRadius: '40px',
+            padding: '4px 12px',
+            color: 'var(--color-text)',
+            cursor: 'pointer',
+            fontFamily: 'monospace',
+            fontSize: '0.85rem',
+          }}
+        >
+          {isDark ? '☀️ Claro' : '🌙 Oscuro'}
+        </button>
+
         {isAdmin && <AdminPanel userId={user?.id} />}
+
         <button
           onClick={logout}
           style={{
-            marginLeft: '15px',
+            marginLeft: '10px',
             background: '#3a1f1f',
             border: 'none',
             color: '#ffbb99',
