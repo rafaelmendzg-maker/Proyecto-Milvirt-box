@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  # Servicio del backend
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: backend
+    container_name: milbox-backend
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - CRYPTO_KEY=${CRYPTO_KEY}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+    env_file:
+      - .env
+    volumes:
+      - ./logs:/app/backend/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/diag/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Servicio del frontend (nginx)
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: frontend-server
+    container_name: milbox-frontend
+    ports:
+      - "3000:80"
+    environment:
+      - VITE_API_URL=http://backend:3001
+    env_file:
+      - .env
+    restart: unless-stopped
+    depends_on:
+      - backend
